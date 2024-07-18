@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Idea
+.idea
+
+# VSCode
+.vscode
+
+# Pytest
+.pytest_cache
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# MyPy
+.mypy_cache
+
+inference_tests/
+models/*/*pt
+*_debug*
+*copy*
+mlruns/
+outputs/
+
+config.json
+.venv
+.DS_Store
+
+# Artifacts
+*.pt
+*.avi
+*.mp4
+*.pth
+*.MOV
+*.mov
+*.mpeg
+*.pickle
+*.mlmodel
+*.jpg
+*.jpeg
+
+# Pyenv
+.python-version
+
+notebooks/*
+
+data/*
+cache/*
+venv/*
+
+.env
