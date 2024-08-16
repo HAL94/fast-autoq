@@ -13,5 +13,5 @@ class ProductSchema(BaseModel):
     
 class SellerSchema(BaseModel):
     id: int
-    seller_name: str
+    seller_name: Optional[str]
     selling_price: float

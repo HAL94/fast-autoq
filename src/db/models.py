@@ -1,7 +1,6 @@
-from turtle import back
 from typing import List
-from sqlalchemy import Column, Enum, ForeignKey, ForeignKeyConstraint, Integer, MetaData, Numeric, UniqueConstraint
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy import Column, Enum, ForeignKey, MetaData, Numeric, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 import enum
 from .db_init import engine
 
@@ -27,16 +26,6 @@ RolesEnum = Enum(RolesValues.SELLER.value,
                  RolesValues.CUSTOMER.value,
                  RolesValues.ADMIN.value, name='role')
 
-# product_sellers = Table(
-#     "product_sellers",
-#     Base.metadata,
-#     Column('id', Integer, primary_key=True),
-#     Column("product", ForeignKey("products.id")),
-#     Column("seller", ForeignKey("sellers.id")),
-#     Column("price", Numeric(10, 2))
-# )
-
-
 class RolesDb(Base):
     __tablename__ = "roles"
     role: Mapped[Enum] = Column(RolesEnum, unique=True, primary_key=True)
@@ -48,7 +37,7 @@ class UserDb(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
-    hashed_password: Mapped[str]
+    hashed_password: Mapped[str] = mapped_column()
     is_active: Mapped[bool] = mapped_column(default=True)
     user_role: Mapped[str] = mapped_column(ForeignKey("roles.role"))
     user_cart: Mapped["CartDb"] = relationship(back_populates="user")
@@ -168,13 +157,13 @@ class CartDb(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["UserDb"] = relationship(back_populates="user_cart")
 
-    cart_items: Mapped[List["CartItemDb"]] = relationship(
+    cart_items: Mapped[List["LineItemDb"]] = relationship(
         back_populates="cart", cascade="all, delete")
     # cascade="all,delete", backref="parent"
 
 
-class CartItemDb(Base):
-    __tablename__ = "cart_items"
+class LineItemDb(Base):
+    __tablename__ = "line_items"
     __table_args__ = (
         UniqueConstraint("cart_id", "product_id", "seller_id",
                          name="unique_product_seller_in_user_cart"),
@@ -194,8 +183,9 @@ class CartItemDb(Base):
     # seller
     seller_id: Mapped[int] = mapped_column(ForeignKey("sellers.id"))
     seller: Mapped["SellerDb"] = relationship()
-
+    
     purchase_price: Mapped[float] = mapped_column()
+    
     qty: Mapped[int] = mapped_column()
 
 

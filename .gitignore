@@ -56,6 +56,6 @@ notebooks/*
 
 data/*
 cache/*
-venv/*
+venv
 
 .env

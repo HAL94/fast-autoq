@@ -6,7 +6,6 @@ class CartItemAdd(BaseModel):
     product_id: int
     seller_id: int
     qty: int = 1
-    purchase_price: float
 
 
 class GetCart(BaseModel):

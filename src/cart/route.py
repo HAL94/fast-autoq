@@ -10,7 +10,7 @@ from common.depends import GetUserCart
 from common.app_response import AppResponse
 
 from db.db_init import get_db
-from db.models import CartDb, CartItemDb
+from db.models import CartDb, LineItemDb, ProductSellerDb
 
 from auth.security import AppJwtBearer, get_token_header
 
@@ -30,8 +30,8 @@ def get_cart(cart: CartDb = Depends(GetUserCart(throw_error=True))):
 
 @router.post('/plus/{cart_item_id}', response_model=AppResponse[CartItem])
 def plus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
-    cart_item = db.query(CartItemDb).where(
-        CartItemDb.id == cart_item_id).where(CartItemDb.cart_id == cart.id).first()
+    cart_item = db.query(LineItemDb).where(
+        LineItemDb.id == cart_item_id).where(LineItemDb.cart_id == cart.id).first()
 
     if not cart_item:
         raise HTTPException(status_code=500, detail='Could not get cart_item')
@@ -47,9 +47,9 @@ def plus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_e
 
 @router.post('/minus/{cart_item_id}', response_model=CartItem)
 def minus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
-    cart_item = db.query(CartItemDb).where(
-        CartItemDb.id == cart_item_id).\
-        where(CartItemDb.cart_id == cart.id).first()
+    cart_item = db.query(LineItemDb).where(
+        LineItemDb.id == cart_item_id).\
+        where(LineItemDb.cart_id == cart.id).first()
 
     if not cart_item:
         raise HTTPException(
@@ -67,14 +67,14 @@ def minus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_
 
 @router.post('/remove/{cart_item_id}', response_model=GetCart)
 def remove_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
-    cart_item = db.query(CartItemDb).where(
-        CartItemDb.id == cart_item_id).first()
+    cart_item = db.query(LineItemDb).where(
+        LineItemDb.id == cart_item_id).first()
 
     if not cart_item:
         raise HTTPException(
             status_code=400, detail="could not find cart_item with passed id")
 
-    del_query = delete(CartItemDb).where(CartItemDb.id == cart_item_id)
+    del_query = delete(LineItemDb).where(LineItemDb.id == cart_item_id)
 
     db.execute(del_query)
 
@@ -89,7 +89,7 @@ def remove_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw
 @router.post('/clear')
 def clear_cart(cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
     try:
-        del_query = delete(CartItemDb).where(CartItemDb.cart_id == cart.id)
+        del_query = delete(LineItemDb).where(LineItemDb.cart_id == cart.id)
 
         db.execute(del_query)
 
@@ -106,8 +106,19 @@ def add_cart_item(cart_item_data: CartItemAdd, user = Depends(AppJwtBearer()), d
 
     if not cart:
         user_cart = create_user_cart(db, user["id"])
+    
+    seller_id = cart_item_data.seller_id
+    product_id = cart_item_data.product_id
+    
+    product_price = db.query(ProductSellerDb.price).\
+        filter(ProductSellerDb.seller_id == seller_id, 
+               ProductSellerDb.product_id == product_id).\
+        first()
 
-    cart_item = CartItemDb(**cart_item_data.model_dump())
+    line_item_data = {**cart_item_data.model_dump()}
+    line_item_data['purchase_price'] = product_price[0]
+    
+    cart_item = LineItemDb(**line_item_data)
 
     user_cart.cart_items.append(cart_item)
 
