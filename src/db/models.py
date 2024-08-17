@@ -1,5 +1,6 @@
+import datetime
 from typing import List
-from sqlalchemy import Column, Enum, ForeignKey, MetaData, Numeric, UniqueConstraint
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, MetaData, Numeric, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 import enum
 from .db_init import engine
@@ -21,10 +22,21 @@ class RolesValues(enum.Enum):
     CUSTOMER = "CUSTOMER"
     ADMIN = "ADMIN"
 
+class LineTypeValues(enum.Enum):
+    ORDER = 'order'
+    CART = 'cart'
+    
+class CartStatusValues(enum.Enum):
+    ACTIVE = 'active'
+    EMPTY = 'EMPTY'
 
 RolesEnum = Enum(RolesValues.SELLER.value,
                  RolesValues.CUSTOMER.value,
                  RolesValues.ADMIN.value, name='role')
+
+LineTypeEnum = Enum(LineTypeValues.CART.value, LineTypeValues.ORDER.value, name='line-type')
+
+CartStatusEnum = Enum(CartStatusValues.ACTIVE.value, CartStatusValues.EMPTY.value, name='cart-status')
 
 class RolesDb(Base):
     __tablename__ = "roles"
@@ -158,8 +170,46 @@ class CartDb(Base):
     user: Mapped["UserDb"] = relationship(back_populates="user_cart")
 
     cart_items: Mapped[List["LineItemDb"]] = relationship(
-        back_populates="cart", cascade="all, delete")
+        back_populates="cart")
+    
+    status: Mapped[Enum] = mapped_column(CartStatusEnum, nullable=True)
+    total: Mapped[float] = mapped_column(default=0)
     # cascade="all,delete", backref="parent"
+
+
+class OrderDb(Base):
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    external_id: Mapped[str] = mapped_column()
+    fulfillment_status: Mapped[str] = mapped_column()
+    payment_status: Mapped[str] = mapped_column()
+
+    cart_id: Mapped[int] = mapped_column(ForeignKey("cart.id"))
+    cart: Mapped["CartDb"] = relationship()
+
+    customer_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    customer: Mapped["UserDb"] = relationship()
+
+    email: Mapped[str] = mapped_column()
+    phone: Mapped[str] = mapped_column()
+    currency_code: Mapped[str] = mapped_column()
+    tax_rate: Mapped[float] = mapped_column()
+
+    canceld_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    created_date: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    seller_id: Mapped[int] = mapped_column(ForeignKey("sellers.id"))
+    seller: Mapped["SellerDb"] = relationship()
+
+    order_amount: Mapped[float] = mapped_column()
 
 
 class LineItemDb(Base):
@@ -173,7 +223,7 @@ class LineItemDb(Base):
 
     # cart
     cart_id: Mapped[int] = mapped_column(
-        ForeignKey("cart.id", ondelete='cascade'))
+        ForeignKey("cart.id"), nullable=True)
     cart: Mapped["CartDb"] = relationship(back_populates="cart_items")
 
     # product
@@ -184,9 +234,14 @@ class LineItemDb(Base):
     seller_id: Mapped[int] = mapped_column(ForeignKey("sellers.id"))
     seller: Mapped["SellerDb"] = relationship()
     
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), nullable=True)
+    order: Mapped["OrderDb"] = relationship()
+
     purchase_price: Mapped[float] = mapped_column()
-    
     qty: Mapped[int] = mapped_column()
+    total: Mapped[float] = mapped_column()
+    
+    line_type: Mapped[Enum] = mapped_column(LineTypeEnum, nullable=False)
 
 
 Base.metadata.create_all(bind=engine)

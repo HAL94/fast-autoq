@@ -1,0 +1,34 @@
+Product
+    id
+    title
+    description
+    thumbnail
+    category_id
+    has_variants
+
+ProductVariant
+    id
+    title
+    product_id
+    variant_rank
+
+# E.g. Size, color, material, etc..
+ProductOption
+    id
+    title
+    product_id
+
+ProductOptionValue
+    id
+    value
+    option_id
+    variant_id
+
+ProductPrice
+    id
+    product_id
+    variant_id
+    seller_id
+    base_price
+    price
+    currency_code

@@ -1,11 +1,14 @@
+# When importing a file, Python only searches the directory that the entry-point script is running from 
+# and sys.path which includes locations such as the package installation directory
+
+from db.db_init import get_db, engine
+from db.models import Base, CategoryDb, ProductDb, ProductSellerDb, RolesDb, RolesValues, SellerDb, UserDb
 from random import uniform
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from src.db.db_init import get_db, engine
-from src.db.models import Base, CategoryDb, ProductDb, ProductSellerDb, RolesDb, RolesValues, SellerDb, UserDb
-
 from passlib.context import CryptContext
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
