@@ -25,3 +25,6 @@ class CartItem(BaseModel):
     purchase_price: Decimal = Field(decimal_places=2)
     qty: int
     total: Decimal = Field(decimal_places=2)
+
+class ClearCart(BaseModel):
+    success: bool

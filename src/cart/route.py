@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from cart.schema import CartItem, CartItemAdd, GetCart
+from cart.schema import CartItem, CartItemAdd, ClearCart, GetCart
 from cart.services import create_user_cart
 
 from common.depends import GetUserCart
@@ -31,7 +31,7 @@ def get_cart(cart: CartDb = Depends(GetUserCart(throw_error=True))):
     }
 
 
-@router.post('/plus/{cart_item_id}', response_model=AppResponse[CartItem])
+@router.post('/plus/{cart_item_id}', response_model=AppResponse[GetCart])
 def plus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
     cart_item = db.query(LineItemDb).where(
         LineItemDb.id == cart_item_id).where(LineItemDb.cart_id == cart.id, LineItemDb.line_type == LineTypeValues.CART.value).first()
@@ -46,11 +46,16 @@ def plus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_e
     db.commit()
 
     return {
-        "data": cart_item
+        "data": {
+            "cart_id": cart.id,
+            "status": cart.status,
+            "cart": cart.cart_items,
+            "total_amount": cart.total
+        }
     }
 
 
-@router.post('/minus/{cart_item_id}', response_model=AppResponse[CartItem])
+@router.post('/minus/{cart_item_id}', response_model=AppResponse[GetCart])
 def minus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
     cart_item = db.query(LineItemDb).where(
         LineItemDb.id == cart_item_id).\
@@ -71,11 +76,16 @@ def minus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_
             status_code=400, detail="Cannot decrement to 0, call remove instead")
 
     return {
-        "data": cart_item
+        "data": {
+            "cart_id": cart.id,
+            "status": cart.status,
+            "cart": cart.cart_items,
+            "total_amount": cart.total
+        }
     }
 
 
-@router.post('/remove/{cart_item_id}', response_model=GetCart)
+@router.post('/remove/{cart_item_id}', response_model=AppResponse[GetCart])
 def remove_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
     cart_item = db.query(LineItemDb).where(
         LineItemDb.id == cart_item_id).first()
@@ -94,17 +104,21 @@ def remove_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw
     db.commit()
 
     return {
-        "cart_id": cart.id,
-        "cart": cart.cart_items
+        "data": {
+            "cart_id": cart.id,
+            "status": cart.status,
+            "cart": cart.cart_items,
+            "total_amount": cart.total
+        }
     }
 
 
-@router.post('/clear')
+@router.post('/clear', response_model=AppResponse[ClearCart])
 def clear_cart(cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Session = Depends(get_db)):
     try:
         del_query = delete(LineItemDb).where(
             LineItemDb.cart_id == cart.id, LineItemDb.line_type == LineTypeValues.CART.value)
-        
+
         cart.total = 0
         cart.status = CartStatusValues.EMPTY.value
 
@@ -112,7 +126,7 @@ def clear_cart(cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Sessio
 
         db.commit()
 
-        return {"success": True}
+        return {"data": {"sucess": True}}
     except Exception as exc:
         print(exc)
 
