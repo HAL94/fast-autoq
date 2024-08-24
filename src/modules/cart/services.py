@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from db.models import CartDb, UserDb
+from db.models import CartDb, CartStatusEnum, CartStatusValues, UserDb
 
 def create_user_cart(db: Session, user_id: int):
     user = db.query(UserDb).filter(UserDb.id == user_id).first()
@@ -10,9 +10,11 @@ def create_user_cart(db: Session, user_id: int):
     
     cart = CartDb()
     cart.user = user
+    cart.status = CartStatusValues.ACTIVE.value
     
     db.add(cart)
         
     db.commit()
     
     return cart
+        

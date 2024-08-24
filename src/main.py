@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from auth.route import router as auth_router
-from category.route import router as cat_router
-from cart.route import router as cart_router
+from modules.category.route import router as cat_router
+from modules.cart.route import router as cart_router
 
 app = FastAPI()
 

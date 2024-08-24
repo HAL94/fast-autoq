@@ -5,8 +5,8 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
-from auth.security import AppJwtBearer
-from category.schema import ProductSchema
+# from auth.security import AppJwtBearer
+from .schema import ProductSchema
 from common.app_response import AppResponse
 from db.db_init import get_db
 from db.models import CategoryDb, ProductDb, ProductSellerDb

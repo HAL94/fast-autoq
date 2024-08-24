@@ -3,14 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from cart.schema import CartItem, CartItemAdd, ClearCart, GetCart
-from cart.services import create_user_cart
+from .schema import CartItemAdd, ClearCart, GetCart
+from .services import create_user_cart
 
 from common.depends import GetUserCart
 from common.app_response import AppResponse
 
 from db.db_init import get_db
-from db.models import CartDb, CartStatusValues, LineItemDb, LineTypeValues, ProductSellerDb
+from db.models import CartDb, LineItemDb, LineTypeValues, ProductSellerDb
 
 from auth.security import AppJwtBearer, get_token_header
 
@@ -40,8 +40,8 @@ def plus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_e
         raise HTTPException(status_code=500, detail='Could not get cart_item')
 
     cart_item.qty = cart_item.qty + 1
-    cart_item.total = round(cart_item.purchase_price * cart_item.qty, 2)
-    cart.total = round(cart.total + cart_item.purchase_price, 2)
+    cart_item.total = cart_item.purchase_price * cart_item.qty
+    cart.total = cart.total + cart_item.purchase_price
 
     db.commit()
 
@@ -68,8 +68,8 @@ def minus_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw_
 
     if cart_item.qty > 1:
         cart_item.qty = cart_item.qty - 1
-        cart_item.total = round(cart_item.purchase_price * cart_item.qty, 2)
-        cart.total = round(cart.total - cart_item.purchase_price, 2)
+        cart_item.total = cart_item.purchase_price * cart_item.qty
+        cart.total = cart.total - cart_item.purchase_price
         db.commit()
     else:
         raise HTTPException(
@@ -94,7 +94,7 @@ def remove_cart_item(cart_item_id: int, cart: CartDb = Depends(GetUserCart(throw
         raise HTTPException(
             status_code=400, detail="could not find cart_item with passed id")
 
-    cart.total = round(cart.total - cart_item.total, 2)
+    cart.total = cart.total - cart_item.total
 
     del_query = delete(LineItemDb).where(
         LineItemDb.id == cart_item_id, LineItemDb.line_type == LineTypeValues.CART.value)
@@ -120,7 +120,6 @@ def clear_cart(cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Sessio
             LineItemDb.cart_id == cart.id, LineItemDb.line_type == LineTypeValues.CART.value)
 
         cart.total = 0
-        cart.status = CartStatusValues.EMPTY.value
 
         db.execute(del_query)
 
@@ -153,13 +152,13 @@ def add_cart_item(cart_item_data: CartItemAdd, user=Depends(AppJwtBearer()), db:
     line_item_data = {**cart_item_data.model_dump()}
     line_item_data['purchase_price'] = product_price[0]
     line_item_data['line_type'] = LineTypeValues.CART.value
-    line_item_data['total'] = product_price[0] * cart_item_data.qty
+    line_item_data['total'] = float(product_price[0] * cart_item_data.qty)
 
     cart_item = LineItemDb(**line_item_data)
 
     user_cart.cart_items.append(cart_item)
-    user_cart.status = CartStatusValues.ACTIVE.value
-    user_cart.total = user_cart.total + float(cart_item.total)
+    
+    user_cart.total = user_cart.total + cart_item.total
 
     db.commit()
 

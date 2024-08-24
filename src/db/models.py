@@ -23,12 +23,12 @@ class RolesValues(enum.Enum):
     ADMIN = "ADMIN"
 
 class LineTypeValues(enum.Enum):
-    ORDER = 'order'
-    CART = 'cart'
+    ORDER = 'ORDER'
+    CART = 'CART'
     
 class CartStatusValues(enum.Enum):
-    ACTIVE = 'active'
-    EMPTY = 'EMPTY'
+    ACTIVE = 'ACTIVE'    
+    ORDER_COMPLETED = 'ORDER_COMPLETED'
 
 RolesEnum = Enum(RolesValues.SELLER.value,
                  RolesValues.CUSTOMER.value,
@@ -36,7 +36,7 @@ RolesEnum = Enum(RolesValues.SELLER.value,
 
 LineTypeEnum = Enum(LineTypeValues.CART.value, LineTypeValues.ORDER.value, name='line-type')
 
-CartStatusEnum = Enum(CartStatusValues.ACTIVE.value, CartStatusValues.EMPTY.value, name='cart-status')
+CartStatusEnum = Enum(CartStatusValues.ACTIVE.value, CartStatusValues.ORDER_COMPLETED.value, name='cart-status')
 
 class RolesDb(Base):
     __tablename__ = "roles"

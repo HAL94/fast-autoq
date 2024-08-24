@@ -1,10 +1,7 @@
+from pydantic import BaseModel
 
-from decimal import Decimal
-from pydantic import BaseModel, Field
-
-from common.mixins import TwoDecimalPlacesMixin
+from common.mixins import TruncatedFloat
 from db.models import CartStatusValues
-
 
 class CartItemAdd(BaseModel):
     product_id: int
@@ -15,16 +12,22 @@ class CartItemAdd(BaseModel):
 class GetCart(BaseModel):
     cart_id: int
     status: CartStatusValues
-    total_amount: Decimal = Field(decimal_places=2)
+    total_amount: TruncatedFloat
     cart: list["CartItem"]
+    # _total_amount = field_validator('total_amount')(decimals_normalize)
+
 
 class CartItem(BaseModel):
     id: int
     product_id: int
     seller_id: int
-    purchase_price: Decimal = Field(decimal_places=2)
+    
+    purchase_price: TruncatedFloat
+    
     qty: int
-    total: Decimal = Field(decimal_places=2)
+    
+    total: TruncatedFloat
+
 
 class ClearCart(BaseModel):
     success: bool
