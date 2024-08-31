@@ -10,7 +10,8 @@ from common.depends import GetUserCart
 from common.app_response import AppResponse
 
 from db.db_init import get_db
-from db.models import CartDb, LineItemDb, LineTypeValues, ProductSellerDb
+from .models import CartDb, LineItemDb, LineTypeValues
+from modules.sellers.models import ProductSellerDb
 
 from auth.security import AppJwtBearer, get_token_header
 
@@ -124,8 +125,10 @@ def clear_cart(cart: CartDb = Depends(GetUserCart(throw_error=True)), db: Sessio
         db.execute(del_query)
 
         db.commit()
+        
+        clear_cart = ClearCart(success=True)
 
-        return {"data": {"sucess": True}}
+        return {"data": clear_cart }
     except Exception as exc:
         print(exc)
 

@@ -4,7 +4,7 @@ from auth.security import AppJwtBearer
 from sqlalchemy.orm import Session
 
 from db.db_init import get_db
-from db.models import CartDb, CartStatusValues
+from modules.cart.models import CartDb, CartStatusValues
 
 
 class GetUserCart():

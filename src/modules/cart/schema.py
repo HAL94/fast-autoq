@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 from common.mixins import TruncatedFloat
-from db.models import CartStatusValues
+from .models import CartStatusValues
 
 class CartItemAdd(BaseModel):
     product_id: int
@@ -14,7 +14,6 @@ class GetCart(BaseModel):
     status: CartStatusValues
     total_amount: TruncatedFloat
     cart: list["CartItem"]
-    # _total_amount = field_validator('total_amount')(decimals_normalize)
 
 
 class CartItem(BaseModel):

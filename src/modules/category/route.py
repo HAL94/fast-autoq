@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session, joinedload
 from .schema import ProductSchema
 from common.app_response import AppResponse
 from db.db_init import get_db
-from db.models import CategoryDb, ProductDb, ProductSellerDb
+from .models import CategoryDb
+from ..sellers.models import ProductSellerDb
+from ..products.models import ProductDb
 
 
 router = APIRouter(prefix="/category", tags=["Category"])
@@ -34,7 +36,7 @@ async def get_category_products(id: int, db: Session = Depends(get_db)):
         all()
 
     result = []
-    
+
     for result_item in result_set:
         product: ProductDb = result_item[0]
 

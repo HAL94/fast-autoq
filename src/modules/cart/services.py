@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from db.models import CartDb, CartStatusEnum, CartStatusValues, UserDb
+from .models import CartDb, CartStatusValues
+from modules.user.models import UserDb
 
 def create_user_cart(db: Session, user_id: int):
     user = db.query(UserDb).filter(UserDb.id == user_id).first()

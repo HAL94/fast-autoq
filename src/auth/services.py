@@ -9,7 +9,7 @@ from auth.security import ALGORITHM, SECRET_KEY
 from db.db_init import get_db
 from sqlalchemy.orm import Session
 
-from db.models import RolesValues, UserDb
+from modules.user.models import UserDb, RolesValues
 
 def register_user(data: RegisterUser, db: Session = Depends(get_db)):
     try:
