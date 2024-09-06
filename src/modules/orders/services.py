@@ -11,30 +11,46 @@ from sqlalchemy.orm import Session
 
 from modules.orders.models import OrderDb
 from modules.orders.schema import CreateOrder
+from dataclasses import dataclass
 
 
-def service_meta(db: Session = Depends(get_db), user=Depends(AppJwtBearer()), cart: CartDb = Depends(GetUserCart(throw_error=True))):
+def order_service_meta(db: Session = Depends(get_db), user=Depends(AppJwtBearer()), cart: CartDb = Depends(GetUserCart(throw_error=True))):
     return db, user, cart
 
 
-class CreateOrderFromCart():
-    def __init__(self, deps: Tuple[Session, User, CartDb] = Depends(service_meta)):
-        self.db, self.user, self.cart = deps
-
+@dataclass
+class OrderServiceBase():
+    deps: Tuple[Session, User, CartDb] = Depends(order_service_meta)
+    
+    
+@dataclass
+class CreateOrderFromCart(OrderServiceBase):    
     def create_order(self):
         try:
-            created_order = CreateOrder(external_id='ext_123', fulfillment_status='PENDING', payment_status='PAID', cart_id=self.cart.id, currency_code='SAR', tax_rate='0.15',
-                                        customer_id=self.user['id'], email=self.user['sub'], phone='+96634534343', seller_id=1, order_amount=self.cart.total)
+            db, user, cart = self.deps
+            if len(cart.cart_items) == 0:
+                raise Exception('Cannot create order from empty cart')
+            
+            created_order = CreateOrder(external_id='ext_123', fulfillment_status='PENDING', payment_status='PAID', cart_id=cart.id, currency_code='SAR', tax_rate='0.15',
+                                        customer_id=user['id'], email=user['sub'], phone='+96634534343', seller_id=1, order_amount=cart.total)
+            
             order = OrderDb(**created_order.model_dump())
 
-            self.cart.total = 0
+            cart.total = 0
 
-            for line_item in self.cart.cart_items:
+            order_items = []
+            
+            for line_item in cart.cart_items:
                 line_item.line_type = LineTypeValues.ORDER.value
+                line_item.order_id = order.id
+                
+                order_items.append(line_item)
+            
+            order.order_items = order_items
 
-            self.db.add(order)
+            db.add(order)
 
-            self.db.commit()
+            db.commit()
 
             return created_order
 

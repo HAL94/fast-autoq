@@ -1,8 +1,9 @@
 import datetime
 from typing import List
-from sqlalchemy import DateTime, ForeignKey, func
+from sqlalchemy import DateTime, ForeignKey, Nullable, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
+from modules.cart.models import LineTypeValues
 from modules.sellers.models import SellerDb
 
 class OrderDb(Base):
@@ -25,7 +26,7 @@ class OrderDb(Base):
     tax_rate: Mapped[float] = mapped_column()
 
     canceld_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True), server_default=None, nullable=True
     )
     created_date: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -38,3 +39,5 @@ class OrderDb(Base):
     seller: Mapped["SellerDb"] = relationship() # type: ignore
 
     order_amount: Mapped[float] = mapped_column()
+    
+    order_items: Mapped[List["LineItemDb"]] = relationship(back_populates="order", primaryjoin=f"and_(OrderDb.id==LineItemDb.order_id, LineItemDb.line_type=='{LineTypeValues.ORDER.value}')") # type: ignore

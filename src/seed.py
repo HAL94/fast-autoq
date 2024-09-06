@@ -2,12 +2,24 @@
 # and sys.path which includes locations such as the package installation directory
 
 from db.db_init import get_db, engine
-from db.models import Base, CategoryDb, ProductDb, ProductSellerDb, RolesDb, RolesValues, SellerDb, UserDb
+from db.base import Base
+from common.all_models import cat_models, product_models, seller_models, user_models
 from random import uniform
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+
+
+RolesValues = user_models.RolesValues
+
+RolesDb = user_models.RolesDb
+UserDb = user_models.UserDb
+CategoryDb = cat_models.CategoryDb
+ProductDb = product_models.ProductDb
+SellerDb = seller_models.SellerDb
+ProductSellerDb = seller_models.ProductSellerDb
+
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -40,7 +40,7 @@ class CartDb(Base):
 class LineItemDb(Base):
     __tablename__ = "line_items"
     __table_args__ = (
-        UniqueConstraint("cart_id", "product_id", "seller_id",
+        UniqueConstraint("cart_id", "product_id", "seller_id", "line_type",
                          name="unique_product_seller_in_user_cart"),
     )
 
